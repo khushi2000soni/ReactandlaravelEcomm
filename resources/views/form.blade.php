@@ -65,7 +65,26 @@
                     // Redirect to a success page or display a success message
                     alert('Data stored in localStorage. It will be synced with the server when online.');
 
-                    
+                    if (navigator.onLine) {
+                        // Send data to the server using AJAX
+                        console.log("Sending data to the server");
+                        $.ajax({
+                            url: '{{ route("user.store") }}',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(userData),
+                            success: function (response) {
+                                console.log('Data stored in the database:', response);
+
+                                // Remove data from localStorage after successful insertion
+                                localStorage.removeItem('userData');
+                                console.log('Data removed from localStorage.');
+                            },
+                            error: function (xhr, status, error) {
+                                console.log('Error sending data to the server: ' + error);
+                            }
+                        });
+                    }
                 } else {
                     alert('localStorage is not supported in this browser.');
                 }
@@ -75,32 +94,34 @@
             });
         });
 
-        function checkNetworkStatus() {
-            if (navigator.onLine) {
-                // The system is online, try to synchronize data
-                const userData = localStorage.getItem('userData');
+        window.addEventListener('online', () => {
+            // When the system comes back online, trigger synchronization
+            alert("System is back online.");
 
-                if (userData) {
-                    $.ajax({
-                        url: '{{ route("user.store") }}',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: userData,
-                        success: function (response) {
-                            console.log('Data stored in the database:', response);
+            // Check if there's data in localStorage
+            const userData = localStorage.getItem('userData');
 
-                            // Remove data from localStorage after successful insertion
-                            localStorage.removeItem('userData');
-                            console.log('Data removed from localStorage.');
-                        },
-                        error: function (xhr, status, error) {
-                            console.log('Error sending data to the server: ' + error);
-                        }
-                    });
-                }
+            if (userData && navigator.onLine) {
+                // Send data to the server using AJAX
+                console.log("Sending data to the server");
+                $.ajax({
+                    url: '{{ route("user.store") }}',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: userData,
+                    success: function (response) {
+                        console.log('Data stored in the database:', response);
+
+                        // Remove data from localStorage after successful insertion
+                        localStorage.removeItem('userData');
+                        console.log('Data removed from localStorage.');
+                    },
+                    error: function (xhr, status, error) {
+                        console.log('Error sending data to the server: ' + error);
+                    }
+                });
             }
-        }
-        setInterval(checkNetworkStatus, 5000);
+        });
     </script>
 
 </body>
